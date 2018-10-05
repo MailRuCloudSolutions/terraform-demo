@@ -43,14 +43,21 @@ resource "openstack_networking_router_interface_v2" "terraform" {
   subnet_id = "${openstack_networking_subnet_v2.terraform-sbnt.id}"
 }
 
-//создаем группу безопасности, разрешающую входящие подключения по ssh
-resource "openstack_compute_secgroup_v2" "ssh" {
-  name = "allow-ssh"
-  description = "Allow ssh traffic from everywhere"
+//создаем группу безопасности, разрешающую входящие подключения по ssh/http
+resource "openstack_compute_secgroup_v2" "ssh-and-http" {
+  name = "allow-ssh-and-http"
+  description = "Allow ssh and http traffic from everywhere"
 
   rule {
     from_port = 22
     to_port = 22
+    ip_protocol = "tcp"
+    cidr = "0.0.0.0/0"
+  }
+
+  rule {
+    from_port = 80
+    to_port = 80
     ip_protocol = "tcp"
     cidr = "0.0.0.0/0"
   }
@@ -74,7 +81,7 @@ resource "openstack_compute_instance_v2" "instance" {
 
   key_pair = "${openstack_compute_keypair_v2.terraform_keypair.name}"
   security_groups = [
-    "${openstack_compute_secgroup_v2.ssh.name}"]
+    "${openstack_compute_secgroup_v2.ssh-and-http.name}"]
 
   network = {
     uuid = "${openstack_networking_network_v2.terraform-net.id}"
